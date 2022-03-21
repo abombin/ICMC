@@ -1,9 +1,12 @@
-(cd ./bactopia && ls) > bacteria.list
-cd bactopia
+conda activate bactopia
+
+(cd ./bactopia_gtdbtk && ls) > bacteria.list
+cd bactopia_gtdbtk
 for i in $(cat ../bacteria.list); do cd ./"$i"
 mkdir output
 organism=$(cat bacteria.id)
-bactopia prepare input/ > fastqs.txt
+
+bactopia prepare ./input > fastqs.txt
 
 bactopia --fastqs fastqs.txt \
 	--datasets /home/ubuntu/bactopia/datasets \
@@ -11,7 +14,7 @@ bactopia --fastqs fastqs.txt \
 	--coverage 100 \
 	--genome_size median \
 	--outdir ./output/ \
-	--max_cpus 4
+	--max_cpus 16
 
 cd ../
 done
