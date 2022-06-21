@@ -1,26 +1,19 @@
 
 import pandas as pd
-df=pd.read_csv("/home/ubuntu/ICMC/demoMultSpecies/gtdbtk/output/classify/gtdbtk.bac120.summary.tsv",sep='\t')
-# select column
-df_1=df.iloc[:, [1]]
-# split column based on pattern
-df_2=df_1['classification'].str.split(';', expand=True)
+df=pd.read_csv("data/gtdbtk.bac120.summary.tsv",sep='\t', converters={'user_genome': lambda x: str(x)})
+   
+def getGtdbSpec(df):
+    phyDat=df[['classification']]
+    splitPhyDat=phyDat['classification'].str.split(';', expand=True)
+    splitPhyDatRen=splitPhyDat.rename(columns={splitPhyDat.columns[6]: 'Experiment_taxa'})
+    expTax=splitPhyDatRen[['Experiment_taxa']]
+    expTax['Experiment_taxa']=expTax['Experiment_taxa'].str.replace('s__', '')
+    gtdbTax=pd.concat([df[['user_genome']], expTax], axis=1)
+    return gtdbTax
 
-df_3=df_2.iloc[:, [6]]
-# rename column
-df_4= df_3.rename(columns={df_3.columns[0]: 'Experiment_Taxa'})
-# replace part of the string in the column
-df_4['Experiment_Taxa'] = df_4['Experiment_Taxa'].str.replace('s__', '')
-
-#df_5=pd.DataFrame(df_4.Experiment_Taxa.replace({'s__':''}, regex=True))
-
+print(getGtdbSpec(df))
 
 
 
-for variable in dir():
-    if variable[0:2] != "__":
 
-        del globals()[variable]
- 
-    
-        
+
