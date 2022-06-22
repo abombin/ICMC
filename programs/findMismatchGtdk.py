@@ -29,7 +29,15 @@ def mergeDat():
     mergedDat=pd.merge(df1, df2, left_on='uuid', right_on='uuid', how='left')
     return mergedDat
 
-print(mergeDat())
+def findMatched():
+    df=mergeDat()
+    matched=df.loc[df['Gtdb_taxa']==df['Original_taxa']]
+    return matched
+
+def findMismatch():
+    df=mergeDat()
+    mismatched=df.loc[df['Gtdb_taxa']!=df['Original_taxa']]
+    return mismatched
 
 
 
