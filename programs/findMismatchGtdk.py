@@ -46,21 +46,29 @@ def findMismatch():
     return mismatched
 
 # check if mismatch was due to misspelling
-def checkDictionary():
-    df=findMismatch()
-    df['Ncbi_match']=''
-    for i in range(0, len(df.index)):
-        taxa=df['Gtdb_taxa'][i]
+
+def checkDictionary(dfTab, colName):
+    dfTab['Ncbi_match']=''
+    for i in range(0, len(dfTab.index)):
+        taxa=dfTab[colName][i]
         dfMatch=gtdbDat[gtdbDat['gtdb_taxonomy'].str.contains(taxa)].reset_index()
-        if df['Original_taxa'][i]==dfMatch['ncbi_organism_name'][0]:
-            df['Ncbi_match'][i]=dfMatch['ncbi_organism_name'][0]
+        if dfTab['Original_taxa'][i]==dfMatch['ncbi_organism_name'][0]:
+            dfTab['Ncbi_match'][i]=dfMatch['ncbi_organism_name'][0]
         else:
-            df['Ncbi_match'][i]=='No_match'
-    return df
+            dfTab['Ncbi_match'][i]=='No_match'
+    return dfTab
 
-print(checkDictionary())
+def getAltTax():
+    phyDat=df[['other_related_references(genome_id,species_name,radius,ANI,AF)']]
+    splitPhyDat=phyDat['other_related_references(genome_id,species_name,radius,ANI,AF)'].str.split(',', expand=True)\
+        .rename({ 1: 'Alt_taxa'}, axis=1)
+    expTax=splitPhyDat[['Alt_taxa']]
+    expTax['Alt_taxa']=expTax['Alt_taxa'].str.replace('s__', '')
+    gtdbTax=pd.concat([df[['user_genome']], expTax], axis=1)
+    gtdbTax = gtdbTax.rename(columns={'user_genome': 'uuid'})
+    return gtdbTax
 
-
+print(checkDictionary(dfTab=findMismatch(), colName='Gtdb_taxa'))
 
 
 
