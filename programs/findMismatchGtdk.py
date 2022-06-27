@@ -1,4 +1,5 @@
 import pandas as pd
+import os
 # gtdb summary
 df=pd.read_csv("data/gtdbtk.bac120.summary.tsv",sep='\t', converters={'user_genome': lambda x: str(x)})
 # original metadata
@@ -60,8 +61,11 @@ def findMismatch():
 def checkDictionary(dfTab, colName):
     dfTab['Ncbi_match']=''
     for i in range(0, len(dfTab.index)):
+        # extract GTDB taxa name
         taxa=dfTab[colName][i]
+        # match GTDB taxa name from results tables with dictionary
         dfMatch=gtdbDat[gtdbDat['gtdb_taxonomy'].str.contains(taxa)].reset_index()
+        # if original name of extracted results column corresponds to dictionary GTDB to NCBI name write NCBI name
         if dfTab['Original_taxa'][i]==dfMatch['ncbi_organism_name'][0]:
             dfTab['Ncbi_match'][i]=dfMatch['ncbi_organism_name'][0]
         else:
@@ -76,7 +80,51 @@ def extractDictMatch():
     matched=df.loc[df['Ncbi_match']!='No_match']
     return matched
 
-print(extractDictMatch())
+# extract taxa that should keep GTDB names
+def matchRest():
+    df=checkDictionary(dfTab=findMismatch(), colName='Gtdb_taxa')
+    dfTab=df.loc[df['Ncbi_match']=='No_match']
+    for i in range(0, len(dfTab.index)):
+        taxa=dfTab['Gtdb_taxa'][i]
+        dfMatch=gtdbDat[gtdbDat['gtdb_taxonomy'].str.contains(taxa)].reset_index()
+        dfTab['Ncbi_match'][i]=dfMatch['ncbi_organism_name'][0]
+    return dfTab
+
+
+# merge results
+def mergeResults():
+    matched=findMatched()[['uuid', 'Gtdb_taxa']].reset_index()
+    matched=matched.rename(columns={'Gtdb_taxa': 'taxa'})
+    print(matched)
+    dictMatch=extractDictMatch()[['uuid', 'Original_taxa']].reset_index()
+    rest=matchRest()[['uuid', 'Ncbi_match']]
+    rest=rest.rename(columns={'Ncbi_match': 'taxa'})
+    dictMatch=dictMatch.rename(columns={'Original_taxa': 'taxa'})
+    finalTab=pd.concat([matched,dictMatch, rest], ignore_index=True).drop(['index'], axis=1)
+    return finalTab
+
+matchedResults=mergeResults()
+print(matchedResults)
+
+
+# check if all of the GTDB samples matched
+def checkSamplesMatch():
+    if len(matchedResults.index)==len(df.index):
+        print('All results matched')
+        samples=[]
+    else:
+        data=matchRest()
+        samples=data.loc[data['Ncbi_match']=='No_match']
+        print('unmatched samples')
+        print(samples)
+    return samples
+
+checkSamplesMatch()
+
+#os.chdir('./test_gtdbtk')
+
+
+
 
 
 
