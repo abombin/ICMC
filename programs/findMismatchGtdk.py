@@ -73,8 +73,6 @@ def checkDictionary(dfTab, colName):
             dfTab['Ncbi_match'][i]=='No_match'
     return dfTab
 
-#print(checkDictionary(dfTab=findMismatch(), colName='Gtdb_taxa'))
-
 # extract species that mismatched due to spelling
 def extractDictMatch():
     df=checkDictionary(dfTab=findMismatch(), colName='Gtdb_taxa')
@@ -91,7 +89,6 @@ def matchRest():
         dfTab['Ncbi_match'][i]=dfMatch['ncbi_organism_name'][0]
     return dfTab
 
-
 # merge results
 def mergeResults():
     matched=findMatched()[['uuid', 'Gtdb_taxa']].reset_index()
@@ -105,8 +102,8 @@ def mergeResults():
 
 matchedResults=mergeResults()
 
-
-#os.chdir('./test_gtdbtk')
+#change directory
+os.chdir('./test_gtdbtk')
 
 # write bucket files and samples per taxa
 taxaList=pd.unique(matchedResults['taxa'].tolist())
@@ -121,10 +118,8 @@ def writeSamples():
         for j in samplesList:
             with open('./buckets/%s' % bucket, "a") as text_file:
                 text_file.write(j + "\n")
-        
-        
+               
 writeSamples()
-
 
 # check if all of the GTDB samples matched
 def checkSamplesMatch():
