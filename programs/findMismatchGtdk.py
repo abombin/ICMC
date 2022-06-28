@@ -1,3 +1,4 @@
+from random import sample
 import pandas as pd
 import os
 # gtdb summary
@@ -95,7 +96,6 @@ def matchRest():
 def mergeResults():
     matched=findMatched()[['uuid', 'Gtdb_taxa']].reset_index()
     matched=matched.rename(columns={'Gtdb_taxa': 'taxa'})
-    print(matched)
     dictMatch=extractDictMatch()[['uuid', 'Original_taxa']].reset_index()
     rest=matchRest()[['uuid', 'Ncbi_match']]
     rest=rest.rename(columns={'Ncbi_match': 'taxa'})
@@ -104,27 +104,40 @@ def mergeResults():
     return finalTab
 
 matchedResults=mergeResults()
-print(matchedResults)
+
+
+#os.chdir('./test_gtdbtk')
+
+# write bucket files and samples per taxa
+taxaList=pd.unique(matchedResults['taxa'].tolist())
+def writeSamples():
+    for i in taxaList:
+        #write name of the bacteria
+        bucket=i.lower().replace(' ', '-')
+        with open('./taxa/%s' % bucket, "a") as text_file:
+            text_file.write(i + "\n")
+        myData=matchedResults.loc[matchedResults['taxa']==i]
+        samplesList=myData['uuid'].tolist()
+        for j in samplesList:
+            with open('./buckets/%s' % bucket, "a") as text_file:
+                text_file.write(j + "\n")
+        
+        
+writeSamples()
 
 
 # check if all of the GTDB samples matched
 def checkSamplesMatch():
     if len(matchedResults.index)==len(df.index):
         print('All results matched')
-        samples=[]
     else:
         data=matchRest()
         samples=data.loc[data['Ncbi_match']=='No_match']
         print('unmatched samples')
         print(samples)
-    return samples
+        pd.DataFrame.to_csv(samples, 'unmatchedSamples.tsv', index=False, sep='\t')
 
 checkSamplesMatch()
-
-#os.chdir('./test_gtdbtk')
-
-
-
 
 
 
