@@ -14,7 +14,7 @@ bactopia --fastqs fastqs.txt \
 	--coverage 100 \
 	--genome_size median \
 	--outdir ./output/ \
-	--max_cpus 16
+	--max_cpus 8
 
 cd ../
 done

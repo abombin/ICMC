@@ -31,7 +31,7 @@ if grep -qw "$i" bactopia.data; then
 echo "$i" "already exists" >> bactopia_dataset.log
 else
 species=$(cat ./taxa/"$i")
-bactopia datasets --species "$species" --outdir /home/ubuntu/bactopia/datasets --limit 100 --cpus 16
+bactopia datasets --species "$species" --outdir /home/ubuntu/bactopia/datasets --cpus 16
 fi
 done
 cd ../

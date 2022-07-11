@@ -6,20 +6,20 @@
 
 sh ./programs/prepData.sh
 
-cd process_par; ls -d */ | parallel -j 16 'cd {} && sh ../../programs/trimgalore.sh'; cd ../
+cd process_par; ls -d */ | parallel -j 23 'cd {} && sh ../../programs/trimgalore.sh'; cd ../
 
 echo "Finished Trimgalore"
 
 # check number of created files output
 ls process_par/*/*_val_1.fq.gz | wc -l; ls process_par/*/*_val_2.fq.gz | wc -l
 
-sleep 120s
+sleep 10s
 
 
-cd process_par; ls -d */ | parallel -j 2 'cd {} && sh ../../programs/parSpades.sh'; cd ../
+cd process_par; ls -d */ | parallel -j 4 'cd {} && sh ../../programs/parSpades.sh'; cd ../
 
 echo "Finished Spades"
-sleep 120s
+sleep 10s
 
 sh ./programs/checkSpadesRes.sh
 
@@ -34,7 +34,7 @@ bash -i ./programs/forBactopiaGtdbtk.sh
 bash -i ./programs/bactopia.sh
 
 echo "Finished Bactopia Run"
-sleep 120s
+sleep 10s
 
 bash -i ./programs/pangenome.sh
 

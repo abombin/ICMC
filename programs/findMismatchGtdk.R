@@ -5,7 +5,7 @@ setwd("./")
 merged_id<-readr::read_delim("gtdbtk/output/gtdbtk.bac120.summary.tsv", delim = "\t", escape_double = FALSE, trim_ws = TRUE)
 
 mergedIdSep <- data.frame(do.call('rbind', strsplit(as.character(merged_id$classification),';',fixed=TRUE)))
-altTax <- data.frame(do.call('rbind', strsplit(as.character(merged_id$other_related_references.genome_id.species_name.radius.ANI.AF.),',',fixed=TRUE)))
+altTax <- data.frame(do.call('rbind', strsplit(as.character(merged_id$`other_related_references(genome_id,species_name,radius,ANI,AF)`),',',fixed=TRUE)))
 
 mergedId<-data.frame(cbind(merged_id$user_genome, mergedIdSep$X7))
 mergedAltTax<-data.frame(cbind(merged_id$user_genome, altTax$X2))
@@ -17,7 +17,7 @@ colnames(mergedId)<-c("uuid", "Experiment_Taxa")
 mergedId$Experiment_Taxa<-gsub("s__", "", mergedId$Experiment_Taxa)
 ###
 prevID<-readr::read_csv("./metaData/metaDat.csv")
-metaDat <- readr::read_csv("~/ICMC/run_03-14-22/metaData/metaDat.csv")
+#metaDat <- readr::read_csv("~/ICMC/run_03-14-22/metaData/metaDat.csv")
 
 control1<-prevID[, c(1,5)]
 colnames(control1)<-c("uuid", "Control_Taxa")
@@ -42,7 +42,7 @@ matched<-control2[(control2$Control_Taxa == control2$Experiment_Taxa), ]
 matchedSel<-matched[, c(1,3)]
 ## check if samples mismatched due to misspelling
 mismatch$Score<-RecordLinkage::levenshteinSim(mismatch$Control_Taxa, mismatch$Experiment_Taxa)
-mismatch$SpellTax <- ifelse((mismatch$Score>0.75), mismatch$Control_Taxa, "NotDecided")
+mismatch$SpellTax <- ifelse((mismatch$Score>0.79), mismatch$Control_Taxa, "NotDecided")
 rematched_new<-mismatch[!(mismatch$SpellTax=="NotDecided"),]
 rematchedSel<-rematched_new[, c(1,3)]
 ## check if other closely related genomes would match
