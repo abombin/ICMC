@@ -1,12 +1,27 @@
 from random import sample
 import pandas as pd
 import os
+# does not have handling of alternative taxa
+
+
 # gtdb summary
-df=pd.read_csv("data/gtdbtk.bac120.summary.tsv",sep='\t', converters={'user_genome': lambda x: str(x)})
+df=pd.read_csv("gtdbtk/output/gtdbtk.bac120.summary.tsv",sep='\t', converters={'user_genome': lambda x: str(x)})
 # original metadata
-metadat=pd.read_csv("data/metaDat.csv", converters={'uuid': lambda x: str(x)})
+metadat=pd.read_csv("metaData/metaDat.csv", converters={'uuid': lambda x: str(x)})
 # gtdb NCBI dictionary
-gtdbDat=pd.read_csv('C:/Users/abomb/OneDrive - Emory University/bacteria/data/gtdb/gtdbtkNcbiDict.tsv', sep='\t')
+gtdbDat=pd.read_csv('/home/ubuntu/gtdbtk/conversion/dictionary/gtdbtkNcbiDict.tsv', sep='\t')
+
+# split dicrionary
+def splitDictionary():
+    phyDat=gtdbDat[['gtdb_taxonomy']]
+    splitPhyDat=phyDat['gtdb_taxonomy'].str.split(';', expand=True)
+    splitPhyDatRen=splitPhyDat.rename(columns={splitPhyDat.columns[6]: 'Gtdb_taxa'})
+    expTax=splitPhyDatRen[['Gtdb_taxa']]
+    expTax['Gtdb_taxa']=expTax['Gtdb_taxa'].str.replace('s__', '')
+    expTax['Gtdb_taxa']=expTax['Gtdb_taxa'].str.replace('Clostridium difficile', 'Clostridioides difficile')
+    gtdbTax=pd.concat([expTax, gtdbDat[['ncbi_organism_name', 'gtdb_taxonomy']]], axis=1)
+    return(gtdbTax)
+    
 
 # get gtdbtk species names
 def getGtdbSpec():
@@ -47,37 +62,45 @@ def mergeDat(df1, df2):
 mainMerge=mergeDat(df1=getGtdbSpec(), df2=getMetadatSpec())
 altMerge=mergeDat(df1=getAltTax(), df2=getMetadatSpec())
 
+
 # get samples that match metadata
 def findMatched():
     df=mainMerge
     matched=df.loc[df['Gtdb_taxa']==df['Original_taxa']]
-    return matched
+    return matched.reset_index()
+
 
 # get samples that mismatch metadata
 def findMismatch():
     df=mainMerge
     mismatched=df.loc[df['Gtdb_taxa']!=df['Original_taxa']]
+    mismatched=mismatched.reset_index()
     return mismatched
 
+
+# for this function to work apropriately need to match GTDB name with name in a dictionary
 def checkDictionary(dfTab, colName):
+    dictionary=splitDictionary()
     dfTab['Ncbi_match']=''
     for i in range(0, len(dfTab.index)):
         # extract GTDB taxa name
         taxa=dfTab[colName][i]
         # match GTDB taxa name from results tables with dictionary
-        dfMatch=gtdbDat[gtdbDat['gtdb_taxonomy'].str.contains(taxa)].reset_index()
-        # if original name of extracted results column corresponds to dictionary GTDB to NCBI name write NCBI name
-        if dfTab['Original_taxa'][i]==dfMatch['ncbi_organism_name'][0]:
+        dfMatch=dictionary[dictionary['gtdb_taxonomy'].str.contains(taxa)].reset_index()
+        #if original name of extracted results column corresponds to dictionary GTDB to NCBI name write NCBI name
+        if dfTab[colName][i]==dfMatch['Gtdb_taxa'][0]:
             dfTab['Ncbi_match'][i]=dfMatch['ncbi_organism_name'][0]
         else:
             dfTab['Ncbi_match'][i]=='No_match'
     return dfTab
+
 
 # extract species that mismatched due to spelling
 def extractDictMatch():
     df=checkDictionary(dfTab=findMismatch(), colName='Gtdb_taxa')
     matched=df.loc[df['Ncbi_match']!='No_match']
     return matched
+
 
 # extract taxa that should keep GTDB names
 def matchRest():
@@ -133,8 +156,5 @@ def checkSamplesMatch():
         pd.DataFrame.to_csv(samples, 'unmatchedSamples.tsv', index=False, sep='\t')
 
 checkSamplesMatch()
-
-
-
 
 
